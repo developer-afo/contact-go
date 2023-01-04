@@ -2,7 +2,9 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
+	"github.com/afolabiolayinka/contact-go/database/repository"
 	"github.com/afolabiolayinka/contact-go/payload/response"
 	"github.com/afolabiolayinka/contact-go/security"
 	"github.com/gofiber/fiber/v2"
@@ -45,4 +47,41 @@ func (handler *BaseHandler) Index(c *fiber.Ctx) error {
 	resp.Data = map[string]interface{}{"about": about}
 
 	return c.JSON(resp)
+}
+
+// GeneratePageable
+func (h *BaseHandler) GeneratePageable(context *fiber.Ctx) (pageable repository.Pageable) {
+
+	pageable.Page = 1
+	pageable.Size = 20
+	pageable.SortBy = "created_at"
+	pageable.SortDirection = "asc"
+	pageable.Search = ""
+
+	size, err := strconv.Atoi(context.Query("size", "0"))
+	if (size > 0) && err == nil {
+		pageable.Size = size
+	}
+
+	page, err := strconv.Atoi(context.Query("page", "1"))
+	if (page > 0) && err == nil {
+		pageable.Page = page
+	}
+
+	orderBy := context.Query("sort_by", "")
+	if orderBy != "" {
+		pageable.SortBy = orderBy
+	}
+
+	sortDir := context.Query("sort_dir", "")
+	if sortDir != "" {
+		pageable.SortBy = sortDir
+	}
+
+	search := context.Query("search", "")
+	if search != "" {
+		pageable.Search = search
+	}
+
+	return pageable
 }
