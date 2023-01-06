@@ -7,11 +7,13 @@ import (
 	authModels "github.com/afolabiolayinka/contact-go/database/model/auth"
 	"github.com/afolabiolayinka/contact-go/database/repository"
 	authRepos "github.com/afolabiolayinka/contact-go/database/repository/auth"
+	"github.com/afolabiolayinka/contact-go/helper"
 	"github.com/google/uuid"
 )
 
 type userService struct {
 	userRepository authRepos.UserRepositoryInterface
+	encrypt        helper.Argon2
 }
 
 type UserServiceInterface interface {
@@ -21,7 +23,7 @@ type UserServiceInterface interface {
 	Update(userDTO authDtos.UserDTO) (authDtos.UserDTO, error)
 	Delete(userUUID uuid.UUID, uid uuid.UUID) error
 	FindByEmail(email string) (authDtos.UserDTO, error)
-	Authenticate(user authDtos.UserDTO) (authDtos.UserDTO, error)
+	Authenticate(email string, password string) (*authDtos.UserDTO, error)
 }
 
 func NewUserService(userRepository authRepos.UserRepositoryInterface) UserServiceInterface {
@@ -121,8 +123,22 @@ func (service *userService) FindByEmail(email string) (authDtos.UserDTO, error) 
 }
 
 // Authenticate : function for authentication
-func (service *userService) Authenticate(userDTO authDtos.UserDTO) (authDtos.UserDTO, error) {
-	user := service.ConvertToModel(userDTO)
-	newRecord, err := service.userRepository.Authenticate(user)
-	return service.ConvertToDTO(newRecord), err
+func (service *userService) Authenticate(email string, password string) (*authDtos.UserDTO, error) {
+
+	user, err := service.userRepository.FindByEmail(email)
+
+	if err != nil {
+		return nil, errors.New("User not found")
+	}
+
+	passwordValid, _ := service.encrypt.ComparePassword(password, user.Password)
+
+	if !passwordValid {
+		return nil, errors.New("Password does not match")
+	}
+
+	userDTO := service.ConvertToDTO(user)
+
+	return &userDTO, err
+
 }

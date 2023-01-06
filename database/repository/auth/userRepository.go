@@ -1,13 +1,11 @@
 package auth
 
 import (
-	"errors"
 	"strings"
 
 	databaseModule "github.com/afolabiolayinka/contact-go/database"
 	authModel "github.com/afolabiolayinka/contact-go/database/model/auth"
 	"github.com/afolabiolayinka/contact-go/database/repository"
-	"github.com/afolabiolayinka/contact-go/helper"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -19,7 +17,6 @@ type UserRepositoryInterface interface {
 	Update(user authModel.User) (authModel.User, error)
 	Delete(uid uuid.UUID) error
 	FindByEmail(email string) (authModel.User, error)
-	Authenticate(user authModel.User) (authModel.User, error)
 }
 
 type userRepository struct {
@@ -132,28 +129,4 @@ func (repository *userRepository) FindByEmail(email string) (row authModel.User,
 		return row, err
 	}
 	return row, nil
-}
-
-// Authenticate : function
-func (repository *userRepository) Authenticate(user authModel.User) (checkUser authModel.User, err error) {
-	var rtn bool
-
-	//checking username
-	err = repository.database.Connection().Model(&authModel.User{}).Where("email = ?", user.Email).First(&checkUser).Error
-
-	if err != nil {
-		return checkUser, errors.New("user not found")
-	}
-
-	//checking password hash
-	rtn, err = helper.ComparePassword(user.Password, checkUser.Password)
-
-	if !rtn || err != nil {
-		return user, errors.New("password do not match")
-	}
-
-	//loadUser
-	repository.database.Connection().Where("uuid = ?", checkUser.UUID).First(&user)
-
-	return user, nil
 }

@@ -26,7 +26,15 @@ type params struct {
 	keyLength   uint32
 }
 
-func generateBytes(n uint32) ([]byte, error) {
+type Argon2 struct {
+	memory      uint32
+	iterations  uint32
+	parallelism uint8
+	saltLength  uint32
+	keyLength   uint32
+}
+
+func (argon *Argon2) generateBytes(n uint32) ([]byte, error) {
 	b := make([]byte, n)
 	_, err := rand.Read(b)
 	if err != nil {
@@ -37,7 +45,7 @@ func generateBytes(n uint32) ([]byte, error) {
 }
 
 // HashPassword generaate the hashed password
-func HashPassword(password string) (encodedHash string, err error) {
+func (argon *Argon2) HashPassword(password string) (encodedHash string, err error) {
 	p := &params{
 		memory:      64 * 1024,
 		iterations:  4,
@@ -46,7 +54,7 @@ func HashPassword(password string) (encodedHash string, err error) {
 		keyLength:   32,
 	}
 
-	salt, err := generateBytes(p.saltLength)
+	salt, err := argon.generateBytes(p.saltLength)
 	if err != nil {
 		return "", err
 	}
@@ -64,10 +72,10 @@ func HashPassword(password string) (encodedHash string, err error) {
 }
 
 // ComparePassword compare the hash with the password
-func ComparePassword(password, encodedHash string) (match bool, err error) {
+func (argon *Argon2) ComparePassword(password, encodedHash string) (match bool, err error) {
 	// Extract the parameters, salt and derived key from the encoded password
 	// hash.
-	p, salt, hash, err := decodeHash(encodedHash)
+	p, salt, hash, err := argon.decodeHash(encodedHash)
 	if err != nil {
 		return false, err
 	}
@@ -84,7 +92,7 @@ func ComparePassword(password, encodedHash string) (match bool, err error) {
 	return false, nil
 }
 
-func decodeHash(encodedHash string) (p *params, salt, hash []byte, err error) {
+func (argon *Argon2) decodeHash(encodedHash string) (p *params, salt, hash []byte, err error) {
 	vals := strings.Split(encodedHash, "$")
 	if len(vals) != 6 {
 		return nil, nil, nil, ErrInvalidHash

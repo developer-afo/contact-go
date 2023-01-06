@@ -19,7 +19,7 @@ const (
 )
 
 // CreateToken : function
-func CreateToken(organizationID string, userID string) (string, error) {
+func CreateToken(userID string) (string, error) {
 	// Create token
 	token := jwt.New(jwt.SigningMethodHS256)
 

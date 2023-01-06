@@ -5,11 +5,12 @@ import (
 	"log"
 
 	appDtos "github.com/afolabiolayinka/contact-go/database/dto/app"
+	"github.com/afolabiolayinka/contact-go/validator"
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
 type ContactValidator struct {
-	Validator[appDtos.ContactDTO]
+	validator.Validator[appDtos.ContactDTO]
 }
 
 func (validator *ContactValidator) Validate(contactDto appDtos.ContactDTO) (map[string]interface{}, error) {

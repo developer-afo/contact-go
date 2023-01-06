@@ -4,6 +4,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/afolabiolayinka/contact-go/database"
 	"github.com/afolabiolayinka/contact-go/router"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
@@ -26,7 +27,9 @@ func main() {
 		LimiterMiddleware: limiter.FixedWindow{},
 	}))
 
-	router.InitializeRouter(app)
+	dbConn := database.StartDatabaseClient()
+
+	router.InitializeRouter(app, dbConn)
 
 	log.Fatal(app.Listen(":8080"))
 }
